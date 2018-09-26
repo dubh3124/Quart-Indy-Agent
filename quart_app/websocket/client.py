@@ -3,7 +3,6 @@ import websockets
 from quart import Blueprint, request
 
 client = Blueprint('client', __name__)
-@client.route('/send')
 async def sendMessage():
     async with websockets.connect(
             request.args.get("websocketUrl")) as websocket:

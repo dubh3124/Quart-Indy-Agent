@@ -1,5 +1,4 @@
-from quart_app import app
+from quart_app import create_app
 
-if __name__ == "__main__":
-    app.run()
+app = create_app()
 

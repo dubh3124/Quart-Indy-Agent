@@ -16,10 +16,12 @@ async def get():
 @walletapi.route('/create')
 async def createwallet():
     try:
+
         wallet = Wallet()
+        await wallet.connectToPool()
         wallet_config = json.dumps({"id": request.args.get("walletId")})
         wallet_creds = json.dumps({"key": request.args.get("walletKey")})
-        asyncio.ensure_future(wallet.create_wallet(wallet_config, wallet_creds, "000000000000000000000000Steward1"))
+        await asyncio.ensure_future(wallet.create_wallet(wallet_config, wallet_creds, "000000000000000000000000Steward1"))
 
         return "wallet create"
     except:
