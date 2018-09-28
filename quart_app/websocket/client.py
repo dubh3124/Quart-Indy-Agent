@@ -1,17 +1,15 @@
 import asyncio
 import websockets
-from quart import Blueprint, request
 
-client = Blueprint('client', __name__)
-async def sendMessage():
-    async with websockets.connect(
-            request.args.get("websocketUrl")) as websocket:
-        name = request.args.get('name')
 
-        await websocket.send(name)
-        print(f"> {name}")
+class WebsocketClient():
+    def __init__(self, url):
+        self.url = url
+    async def sendMessage(self,payload):
+        async with websockets.connect(self.url) as websocket:
+            await websocket.send(payload)
+            print(payload)
 
-        greeting = await websocket.recv()
-        print(f"< {greeting}")
-        return "message sent!"
-
+            greeting = await websocket.recv()
+            print(f"< {greeting}")
+            return "message sent!"

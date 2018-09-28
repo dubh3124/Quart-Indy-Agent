@@ -11,44 +11,49 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class Wallet(Agent):
-    async def create_wallet(self,wallet_config, wallet_credentials, seed):
+
+    def __init__(self, wallet_config, wallet_credentials):
+        super().__init__()
+        self.wallet_config = wallet_config
+        self.wallet_credentials = wallet_credentials
+        if self.wallet_config == None or self.wallet_credentials == None:
+            raise Exception
+
+    async def create_wallet(self, seed):
         """
 
         :rtype: str
         """
-        # logging.INFO('Creating new secure wallet')
         try:
-            pool_handle = await pool.open_pool_ledger(config_name=self.pool_name, config=None)
-            logging.DEBUG(pool_handle)
-            logging.DEBUG("test")
-            #
-
-            # data = json.loads(wallet_config)
-            # await wallet.create_wallet(wallet_config, wallet_credentials)
-            # wallet_handle = await wallet.open_wallet(wallet_config, wallet_credentials)
-            #
-            # steward_did, steward_verkey = await self._generate_steward_DID(wallet_handle, seed)
-            # await did.set_did_metadata(wallet_handle, steward_did, json.dumps({'seed': seed, 'Name': data['id']}))
-            # pool_handle = await pool.open_pool_ledger(config_name="pool1", config=None)
-            # logging.INFO(pool_handle + "PULLSHIT")
-            # dids = await did.list_my_dids_with_meta(wallet_handle)
-            # logging.INFO(dids)
-            # #
+            await wallet.create_wallet(self.wallet_config, self.wallet_credentials)
+            wallet_handle = await wallet.open_wallet(self.wallet_config, self.wallet_credentials)
+            await self._generate_DID(wallet_handle, seed)
+            await wallet.close_wallet(wallet_handle)
         except IndyError as e:
             logging.exception(e)
-            await wallet.delete_wallet(wallet_config, wallet_credentials)
+            await wallet.delete_wallet(self.wallet_config, self.wallet_credentials)
+            raise
 
-    async def listDIDs(self, wallet_config, wallet_credentials):
-        wallet_handle = await wallet.open_wallet(wallet_config, wallet_credentials)
-        dids = await did.list_my_dids_with_meta(wallet_handle)
-        print(dids)
+    async def create_pairwise_DID(self, seed=None, destinationName=None):
+        try:
+            wallet_handle = await wallet.open_wallet(self.wallet_config, self.wallet_credentials)
+            await self._generate_DID(wallet_handle, seed=seed, name=destinationName)
+            await wallet.close_wallet(wallet_handle)
+        except:
+            logging.exception('Oops!')
+            raise
 
 
-    async def _generate_steward_DID(self, wallet_handle, seed):
-        # logging.INFO('Generating and storing steward DID and verkey')
-        did_json = json.dumps({'seed': seed})
-        steward_did, steward_verkey = await did.create_and_store_my_did(wallet_handle, did_json)
-        logging.INFO('Steward DID: ', steward_did)
-        logging.INFO('Steward Verkey: ', steward_verkey)
-        return steward_did, steward_verkey
+    async def listDIDs(self):
+        wallet_handle = await wallet.open_wallet(self.wallet_config, self.wallet_credentials)
+        return await did.list_my_dids_with_meta(wallet_handle)
+
+
+
+    async def _generate_DID(self, wallet_handle, seed=None, name=None):
+        seedjson = json.dumps({'seed': seed})
+        metadata = json.dumps({'seed': seed, 'Name': name})
+        didkey, _ = await did.create_and_store_my_did(wallet_handle, seedjson)
+        await did.set_did_metadata(wallet_handle, didkey, metadata)
+
 

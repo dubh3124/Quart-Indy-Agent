@@ -6,7 +6,7 @@ from indy.error import IndyError
 class Connection():
     def __init__(self,pool_name=None):
         self.pool_name = pool_name
-    async def sendResponse(self,
+    async def sendToAgent(self,
                            wallet_config,
                            wallet_credentials,
                            source_did,
@@ -18,9 +18,9 @@ class Connection():
             'nonce': connection_request['nonce']
         })
         wallet_handle = await wallet.open_wallet(wallet_config, wallet_credentials)
-        pool_handle = await pool.open_pool_ledger(config_name=self.pool_name, config=None)
+        # pool_handle = await pool.open_pool_ledger(config_name=self.pool_name, config=None)
 
-        destination_verkey = await did.key_for_did(pool_handle, wallet_handle, connection_request['did'])
+        destination_verkey = await did.key_for_local_did(wallet_handle, connection_request['did'])
         anoncrypted_connection_response = await crypto.anon_crypt(destination_verkey,
                                                                   connection_response.encode('utf-8'))
         return anoncrypted_connection_response

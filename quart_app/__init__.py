@@ -1,12 +1,22 @@
 import asyncio
 import os
+import logging
 from quart import Quart
+from logging.handlers import RotatingFileHandler
 from quart_openapi import Pint
-from logging.config import dictConfig
 from indy import pool, ledger, wallet, did, crypto
 
 
 def create_app():
+    # maxBytes to small number, in order to demonstrate the generation of multiple log files (backupCount).
+    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
+    # getLogger(__name__):   decorators loggers to file + werkzeug loggers to stdout
+    # getLogger('werkzeug'): decorators loggers to file + nothing to stdout
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(handler)
+
+
     app = Quart(__name__)
 
     app.config.from_object('quart_app.config.Config')
@@ -14,14 +24,6 @@ def create_app():
 
     from logging.config import dictConfig
 
-    dictConfig({
-        'version': 1,
-        'loggers': {
-            'quart.app': {
-                'level': 'DEBUG',
-            },
-        },
-    })
 
 
     # #  Logging
@@ -53,11 +55,11 @@ def create_app():
     # http://flask.pocoo.org/docs/patterns/packages/
     # http://flask.pocoo.org/docs/blueprints/
     from quart_app.apis.wallet import walletapi
+    from quart_app.apis.main import main
     from quart_app.websocket.receive import websoc
-    from quart_app.websocket.client import client
+    app.register_blueprint(main)
     app.register_blueprint(walletapi)
     app.register_blueprint(websoc)
-    app.register_blueprint(client)
     #
     # # from flask_app.script import resetdb, populatedb
     # # # Click Commands
