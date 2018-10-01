@@ -2,29 +2,53 @@ import asyncio
 import os
 import logging
 from quart import Quart
+from quart.logging import default_handler
 from logging.handlers import RotatingFileHandler
+from logging.config import dictConfig
 from quart_openapi import Pint
 from indy import pool, ledger, wallet, did, crypto
 
 
 def create_app():
-    # maxBytes to small number, in order to demonstrate the generation of multiple log files (backupCount).
-    handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-    # getLogger(__name__):   decorators loggers to file + werkzeug loggers to stdout
-    # getLogger('werkzeug'): decorators loggers to file + nothing to stdout
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.ERROR)
-    logger.addHandler(handler)
+    logging.basicConfig(level=logging.DEBUG)
 
+    # dictConfig({
+    #     'version': 1,
+    #     'formatters': {
+    #         'verbose': {
+    #             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+    #         },
+    #         'simple': {
+    #             'format': '%(levelname)s %(message)s'
+    #         },
+    #     },
+    #     'handlers': {
+    #         'default': {
+    #             'level': 'INFO',
+    #             'formatter': 'verbose',
+    #             'class': 'logging.StreamHandler',
+    #         },
+    #     },
+    #     'loggers': {
+    #         'quart.serving': {
+    #             'handlers': ['default'],
+    #             'level': 'INFO',
+    #         },
+    #         '__name__': {
+    #             'handlers': ['default'],
+    #             'level': 'DEBUG',
+    #         },
+    #         'asyncio': {
+    #             'handlers': ['default'],
+    #             'level': 'DEBUG',
+    #         }
+    #     },
+    # })
 
     app = Quart(__name__)
 
-    app.config.from_object('quart_app.config.Config')
+    app.config.from_object("quart_app.config.Config")
     # app.logger.info("Config: %s" % app.config['ENVIRONMENT'])
-
-    from logging.config import dictConfig
-
-
 
     # #  Logging
     # import logging
@@ -57,6 +81,7 @@ def create_app():
     from quart_app.apis.wallet import walletapi
     from quart_app.apis.main import main
     from quart_app.websocket.receive import websoc
+
     app.register_blueprint(main)
     app.register_blueprint(walletapi)
     app.register_blueprint(websoc)
