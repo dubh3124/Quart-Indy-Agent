@@ -1,12 +1,55 @@
 import asyncio
 import os
 import logging
+import json
 from quart import Quart
 from quart.logging import default_handler
 from logging.handlers import RotatingFileHandler
 from logging.config import dictConfig
 from quart_openapi import Pint
 from indy import pool, ledger, wallet, did, crypto
+from indy.error import IndyError
+
+from quart_app.indyutils.wallet import Wallet
+
+
+async def generate_DID(wallet_handle, seed=None, name=None):
+    seedjson = json.dumps({"seed": seed})
+    metadata = json.dumps({"seed": seed, "Name": name})
+    didkey, verkey = await did.create_and_store_my_did(wallet_handle, seedjson)
+    await did.set_did_metadata(wallet_handle, didkey, metadata)
+    return didkey, verkey
+
+
+async def create_wallet(wallet_config, wallet_credentials, name, seed=None):
+    """
+
+    :rtype: str
+    """
+    try:
+        await wallet.create_wallet(wallet_config, wallet_credentials)
+        wallet_handle = await wallet.open_wallet(
+            wallet_config, wallet_credentials
+        )
+        await generate_DID(wallet_handle, seed=seed, name=name)
+        await wallet.close_wallet(wallet_handle)
+    except IndyError as e:
+        logging.exception(e)
+
+
+
+async def create_pool_config(
+        pool_name, genesis_file_path=None, version=None
+):
+    await pool.set_protocol_version(version)
+    # print_log('\n1. Creates a new local pool ledger configuration that is used '
+    #           'later when connecting to ledger.\n')
+    pool_config = json.dumps({"genesis_txn": genesis_file_path})
+    try:
+        await pool.create_pool_ledger_config(pool_name, pool_config)
+    except IndyError:
+        await pool.delete_pool_ledger_config(config_name=pool_name)
+        await pool.create_pool_ledger_config(pool_name, pool_config)
 
 
 def create_app():
@@ -59,6 +102,10 @@ def create_app():
     #     datefmt='%Y%m%d-%H:%M%p',
     # )
 
+    asyncio.get_event_loop().run_until_complete(pool.set_protocol_version(app.config['PROTOCOL_VERSION']))
+    asyncio.get_event_loop().run_until_complete(create_pool_config( app.config["POOL_NAME"],genesis_file_path=app.config["POOLGENESIS"], version=app.config["PROTOCOL_VERSION"]))
+    asyncio.get_event_loop().run_until_complete(create_wallet(json.dumps({"id": "Agent"}), json.dumps({"key": "SuperAgent!"}),'Agent','000000000000000000000000Steward1'))
+
     # from flask_app.apiv1.auth import jwt
     # jwt.init_app(app)
     #
@@ -92,4 +139,7 @@ def create_app():
     # # app.cli.add_command(resetdb)
     # # app.cli.add_command(populatedb)
     #
+
+
+
     return app

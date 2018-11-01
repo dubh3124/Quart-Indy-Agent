@@ -37,11 +37,22 @@ async def createDID():
         try:
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
-            await Wallet(wallet_config, wallet_creds).create_pairwise_DID(
-                destinationName=data["destinationName"]
+            didkey, verkey = await Wallet(
+                wallet_config, wallet_creds
+            ).create_pairwise_DID(destinationName=data["destinationName"])
+            await Wallet(json.dumps({"id": "Agent"}), json.dumps({"key": "SuperAgent!"})).storeDID(didkey,verkey,data["destinationName"])
+            await Connection().submitToPool(
+                json.dumps({"id": "Agent"}),
+                json.dumps({"key": "SuperAgent!"}),
+                submitter_did= "Th7MpTaRZVRYnPiabds81Y",
+                target_did=didkey,
+                target_ver_key=verkey,
+                alias=None,
+                role="TRUST_ANCHOR",
             )
             return data["destinationName"] + " created!"
         except:
+            logging.exception("DID not created!")
             return data["destinationName"] + " not created!"
 
 
@@ -63,27 +74,7 @@ async def listDIDs():
 async def send():
     data = json.loads((await request.data))
     if request.method == "POST":
-        wallet_config = json.dumps({"id": data["walletId"]})
-        wallet_creds = json.dumps({"key": data["walletKey"]})
-        pairwise_did = await Wallet(wallet_config, wallet_creds).didfromname(
-            data["destinationName"]
-        )
-        verkey = await Wallet(wallet_config, wallet_creds).verkeyfromdid(pairwise_did)
-
-        connection_request = {
-            "name": "dubh3124_" + data["destinationName"],
-            "did": pairwise_did,
-            "verkey": verkey,
-            "nonce": secrets.randbits(32),
-        }
-        # return json.dumps(connection_request)
-        resp = await WebsocketClient(
-            "ws://localhost:5000/connectionrequest"
-        ).sendMessage(json.dumps(connection_request))
-        decrypted_resp = await Connection().decryptconnectionResponse(
-            wallet_config, wallet_creds, verkey, resp
-        )
-        return decrypted_resp
+      return await Connection().establishConnection(data)
 
 
 @walletapi.route("/verkey", methods=["POST"])

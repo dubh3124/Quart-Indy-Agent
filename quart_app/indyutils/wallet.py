@@ -65,7 +65,9 @@ class Wallet(Agent):
             )
             await did.store_their_did(wallet_handle, idjson)
             await did.set_did_metadata(wallet_handle, didkey, metadata)
-            verkey = await did.key_for_local_did(wallet_handle, didkey)
+            pool_handle = await pool.open_pool_ledger(config_name=self.pool_name, config=None)
+            verkey = await did.key_for_did(pool_handle, wallet_handle, didkey)
+            await pool.close_pool_ledger(pool_handle)
             await wallet.close_wallet(wallet_handle)
             return verkey
         except:
@@ -76,7 +78,8 @@ class Wallet(Agent):
             wallet_handle = await wallet.open_wallet(
                 self.wallet_config, self.wallet_credentials
             )
-            verkey = await did.key_for_local_did(wallet_handle, didkey)
+            pool_handle = await pool.open_pool_ledger(config_name=self.pool_name, config=None)
+            verkey = await did.key_for_did(pool_handle, wallet_handle, didkey)
             await wallet.close_wallet(wallet_handle)
             return verkey
         except:
@@ -103,6 +106,7 @@ class Wallet(Agent):
                 self.wallet_config, self.wallet_credentials
             )
             didlist = json.loads(await did.list_my_dids_with_meta(wallet_handle))
+            print(didlist)
             await wallet.close_wallet(wallet_handle)
             for didobject in didlist:
                 if "metadata" in didobject:
