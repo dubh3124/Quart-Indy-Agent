@@ -1,7 +1,7 @@
 from quart import Blueprint
 
 
-main = Blueprint("main", __name__)
+main = Blueprint("maindir", __name__)
 
 
 @main.route("/")

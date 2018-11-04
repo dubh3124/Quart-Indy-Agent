@@ -1,16 +1,10 @@
 import asyncio
-import os
 import logging
 import json
+import sys
 from quart import Quart
-from quart.logging import default_handler
-from logging.handlers import RotatingFileHandler
-from logging.config import dictConfig
-from quart_openapi import Pint
-from indy import pool, ledger, wallet, did, crypto
+from indy import pool, wallet, did
 from indy.error import IndyError
-
-from quart_app.indyutils.wallet import Wallet
 
 
 async def generate_DID(wallet_handle, seed=None, name=None):
@@ -53,58 +47,17 @@ async def create_pool_config(
 
 
 def create_app():
-    logging.basicConfig(level=logging.DEBUG)
-
-    # dictConfig({
-    #     'version': 1,
-    #     'formatters': {
-    #         'verbose': {
-    #             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-    #         },
-    #         'simple': {
-    #             'format': '%(levelname)s %(message)s'
-    #         },
-    #     },
-    #     'handlers': {
-    #         'default': {
-    #             'level': 'INFO',
-    #             'formatter': 'verbose',
-    #             'class': 'logging.StreamHandler',
-    #         },
-    #     },
-    #     'loggers': {
-    #         'quart.serving': {
-    #             'handlers': ['default'],
-    #             'level': 'INFO',
-    #         },
-    #         '__name__': {
-    #             'handlers': ['default'],
-    #             'level': 'DEBUG',
-    #         },
-    #         'asyncio': {
-    #             'handlers': ['default'],
-    #             'level': 'DEBUG',
-    #         }
-    #     },
-    # })
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, handlers=[ch])
 
     app = Quart(__name__)
 
-    app.config.from_object("quart_app.config.Config")
-    # app.logger.info("Config: %s" % app.config['ENVIRONMENT'])
 
-    # #  Logging
-    # import logging
-    # logging.basicConfig(
-    #     level='DEBUG',
-    #     format='%(asctime)s %(levelname)s: %(message)s '
-    #            '[in %(pathname)s:%(lineno)d]',
-    #     datefmt='%Y%m%d-%H:%M%p',
-    # )
-
+    app.config.from_object("maindir.config.Config")
     asyncio.get_event_loop().run_until_complete(pool.set_protocol_version(app.config['PROTOCOL_VERSION']))
-    asyncio.get_event_loop().run_until_complete(create_pool_config( app.config["POOL_NAME"],genesis_file_path=app.config["POOLGENESIS"], version=app.config["PROTOCOL_VERSION"]))
-    asyncio.get_event_loop().run_until_complete(create_wallet(json.dumps({"id": "Agent"}), json.dumps({"key": "SuperAgent!"}),'Agent','000000000000000000000000Steward1'))
+    asyncio.get_event_loop().run_until_complete(create_pool_config(app.config["POOL_NAME"],genesis_file_path=app.config["POOLGENESIS"], version=app.config["PROTOCOL_VERSION"]))
+    asyncio.get_event_loop().run_until_complete(create_wallet(app.config["AGENTID"], app.config["AGENTKEY"], 'Agent', app.config["SEED"]))
 
     # from flask_app.apiv1.auth import jwt
     # jwt.init_app(app)
@@ -125,9 +78,9 @@ def create_app():
     # Business Logic
     # http://flask.pocoo.org/docs/patterns/packages/
     # http://flask.pocoo.org/docs/blueprints/
-    from quart_app.apis.wallet import walletapi
-    from quart_app.apis.main import main
-    from quart_app.websocket.receive import websoc
+    from maindir.apis.wallet import walletapi
+    from maindir.apis.main import main
+    from maindir.websocket.receive import websoc
 
     app.register_blueprint(main)
     app.register_blueprint(walletapi)

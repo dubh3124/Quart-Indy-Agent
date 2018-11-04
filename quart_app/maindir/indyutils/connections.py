@@ -6,7 +6,7 @@ from indy import pool, ledger, wallet, did, crypto
 from indy.error import IndyError
 from .agent import Agent
 from .wallet import Wallet
-from quart_app.websocket.client import WebsocketClient
+from ..websocket.client import WebsocketClient
 
 
 class Connection(Agent):
@@ -42,7 +42,7 @@ class Connection(Agent):
             "nonce": secrets.randbits(32),
         }
         resp = await WebsocketClient(
-            "ws://localhost:5000/connectionrequest"
+            "ws://localhost:9000/connectionrequest"
         ).sendMessage(json.dumps(connection_request))
         decrypted_resp = await Connection().decryptconnectionResponse(
             self.wallet_id, self.wallet_creds, verkey, resp

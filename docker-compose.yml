@@ -1,23 +1,50 @@
 version: "3"
 services:
-  quart-app:
+  quart-app-1:
+    container_name: "quart-app-1"
+    environment:
+    - AGENTID=Agent1
+    - AGENTKEY=SuperAgent1!
+    - SEED=000000000000000000000000Steward1
     restart: always
     image: quart-app
     build:
       context: .
       dockerfile: quart_app/Dockerfile
     ports:
-    - "9000:9000"
-    env_file:
-    - .env
-  quart-nginx:
-    image: quart-nginx
+    - "9001:9000"
+  quart-app-2:
+    container_name: "quart-app-2"
+    environment:
+    - AGENTID=Agent2
+    - AGENTKEY=SuperAgent2!
+    - SEED=000000000000000000000000Steward2
+    restart: always
+    image: quart-app
     build:
       context: .
-      dockerfile: nginx/Dockerfile
+      dockerfile: quart_app/Dockerfile
     ports:
-    - "80:80"
-    links:
-    - quart-app
-    depends_on:
-    - quart-app
+    - "9002:9000"
+#  quart-nginx-1:
+#    image: quart-nginx
+#    build:
+#      context: .
+#      dockerfile: nginx/Dockerfile
+#    ports:
+#    - "8080:80"
+#    links:
+#    - quart-app-1
+#    depends_on:
+#    - quart-app-1
+#  quart-nginx-2:
+#    image: quart-nginx
+#    build:
+#      context: .
+#      dockerfile: nginx/Dockerfile
+#    ports:
+#    - "9080:80"
+#    links:
+#    - quart-app-2
+#    depends_on:
+#    - quart-app-2

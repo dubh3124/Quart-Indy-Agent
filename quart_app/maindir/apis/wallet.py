@@ -4,7 +4,7 @@ import json
 import secrets
 from quart import Blueprint, request, jsonify
 from quart_openapi import Resource
-from quart_app.indyutils.wallet import Wallet
+from ..indyutils.wallet import Wallet
 from ..websocket.client import WebsocketClient
 from ..indyutils.connections import Connection
 
@@ -40,16 +40,16 @@ async def createDID():
             didkey, verkey = await Wallet(
                 wallet_config, wallet_creds
             ).create_pairwise_DID(destinationName=data["destinationName"])
-            await Wallet(json.dumps({"id": "Agent"}), json.dumps({"key": "SuperAgent!"})).storeDID(didkey,verkey,data["destinationName"])
-            await Connection().submitToPool(
-                json.dumps({"id": "Agent"}),
-                json.dumps({"key": "SuperAgent!"}),
-                submitter_did= "Th7MpTaRZVRYnPiabds81Y",
-                target_did=didkey,
-                target_ver_key=verkey,
-                alias=None,
-                role="TRUST_ANCHOR",
-            )
+            await Wallet(wallet_config, wallet_creds).storeDID(didkey,verkey,data["destinationName"])
+            # await Connection().submitToPool(
+            #     json.dumps({"id": "Agent"}),
+            #     json.dumps({"key": "SuperAgent!"}),
+            #     submitter_did= "Th7MpTaRZVRYnPiabds81Y",
+            #     target_did=didkey,
+            #     target_ver_key=verkey,
+            #     alias=None,
+            #     role="TRUST_ANCHOR",
+            # )
             return data["destinationName"] + " created!"
         except:
             logging.exception("DID not created!")

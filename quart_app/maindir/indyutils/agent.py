@@ -11,8 +11,8 @@ class Agent(object):
         # Set protocol version to 2 to work with the current version of Indy Node
         self.PROTOCOL_VERSION = app.config["PROTOCOL_VERSION"]
         self.pool_name = app.config["POOL_NAME"]
-        self.wallet_id = app.config["MAINAGENTID"]
-        self.wallet_creds = app.config["MAINAGENTCREDS"]
+        self.wallet_id = app.config["AGENTID"]
+        self.wallet_creds = app.config["AGENTKEY"]
 
 
     async def connectToPool(self):

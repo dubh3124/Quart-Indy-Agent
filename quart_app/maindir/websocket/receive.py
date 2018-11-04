@@ -17,8 +17,8 @@ async def ws():
         data = json.loads(payload)
 
         try:
-            wallet_config = app.config["MAINAGENTID"]
-            wallet_creds = app.config["MAINAGENTCREDS"]
+            wallet_config = app.config["AGENTID"]
+            wallet_creds = app.config["AGENTKEY"]
             # storeDID simulates the storing sender's did on pool ledger. It will not be used.
             # await Wallet(wallet_config, wallet_creds).storeDID(data['did'],data['verkey'], data['name'])
 
