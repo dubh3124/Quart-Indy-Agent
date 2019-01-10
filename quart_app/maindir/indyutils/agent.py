@@ -1,25 +1,41 @@
 import asyncio
 import json
-from quart import current_app as app
+import logging
+import os
 from indy import pool, ledger, wallet, did, crypto
 from indy.error import IndyError
+from ..indyutils.wallet import Wallet
 
 
 class Agent(object):
     def __init__(self):
-        self.genesis_file_path = app.config["POOLGENESIS"]
+        self.genesis_file_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ptgenesis")
+    )
         # Set protocol version to 2 to work with the current version of Indy Node
-        self.PROTOCOL_VERSION = app.config["PROTOCOL_VERSION"]
-        self.pool_name = app.config["POOL_NAME"]
-        self.wallet_id = app.config["AGENTID"]
-        self.wallet_creds = app.config["AGENTKEY"]
-
+        self.PROTOCOL_VERSION = os.getenv("VERSION")
+        self.pool_name = os.environ["POOLNAME"]
+        self.wallet_id = json.dumps({"id": os.getenv("AGENTID")})
+        self.wallet_creds = json.dumps({"key": os.getenv("AGENTKEY")})
+        self.agent_seed =os.getenv("SEED")
+        self.agent_pool_config = os.getenv("POOLCONFIG")
+        self.agent_role = "TRUST_ANCHOR"
 
     async def connectToPool(self):
         await self._create_pool_config(
             self.pool_name,
             genesis_file_path=self.genesis_file_path,
             version=self.PROTOCOL_VERSION,
+        )
+
+    async def get_agent_did(self):
+        return await Wallet(self.wallet_id, self.wallet_creds).didfromseed(
+            seed=self.agent_seed
+        )
+
+    async def getverkey(self):
+        return await Wallet(self.wallet_id, self.wallet_creds).verkeyfromseed(
+            seed=self.agent_seed
         )
 
     async def _create_pool_config(

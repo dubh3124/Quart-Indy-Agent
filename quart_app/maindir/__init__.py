@@ -2,6 +2,7 @@ import asyncio
 import logging
 import json
 import sys
+import os
 from quart import Quart
 from indy import pool, wallet, did
 from indy.error import IndyError
@@ -22,25 +23,25 @@ async def create_wallet(wallet_config, wallet_credentials, name, seed=None):
     """
     try:
         await wallet.create_wallet(wallet_config, wallet_credentials)
-        wallet_handle = await wallet.open_wallet(
-            wallet_config, wallet_credentials
-        )
+        wallet_handle = await wallet.open_wallet(wallet_config, wallet_credentials)
         await generate_DID(wallet_handle, seed=seed, name=name)
         await wallet.close_wallet(wallet_handle)
     except IndyError as e:
         logging.exception(e)
 
 
-
-async def create_pool_config(
-        pool_name, genesis_file_path=None, version=None
-):
+async def create_pool_config(pool_name, genesis_file_path=None, version=None):
+    logging.debug(pool_name)
+    logging.debug(genesis_file_path)
+    logging.debug(version)
     await pool.set_protocol_version(version)
     # print_log('\n1. Creates a new local pool ledger configuration that is used '
     #           'later when connecting to ledger.\n')
     pool_config = json.dumps({"genesis_txn": genesis_file_path})
     try:
-        await pool.create_pool_ledger_config(pool_name, pool_config)
+
+        poolcon = await pool.create_pool_ledger_config(pool_name, pool_config)
+        logging.debug(poolcon)
     except IndyError:
         await pool.delete_pool_ledger_config(config_name=pool_name)
         await pool.create_pool_ledger_config(pool_name, pool_config)
@@ -53,11 +54,20 @@ def create_app():
 
     app = Quart(__name__)
 
-
     app.config.from_object("maindir.config.Config")
-    asyncio.get_event_loop().run_until_complete(pool.set_protocol_version(app.config['PROTOCOL_VERSION']))
-    asyncio.get_event_loop().run_until_complete(create_pool_config(app.config["POOL_NAME"],genesis_file_path=app.config["POOLGENESIS"], version=app.config["PROTOCOL_VERSION"]))
-    asyncio.get_event_loop().run_until_complete(create_wallet(app.config["AGENTID"], app.config["AGENTKEY"], 'Agent', app.config["SEED"]))
+    poolc = asyncio.get_event_loop().run_until_complete(
+        create_pool_config(
+            app.config["POOL_NAME"],
+            genesis_file_path=app.config["POOLGENESIS"],
+            version=2,
+        )
+    )
+    logging.debug(poolc)
+    asyncio.get_event_loop().run_until_complete(
+        create_wallet(
+            app.config["AGENTID"], app.config["AGENTKEY"], "Agent", app.config["SEED"]
+        )
+    )
 
     # from flask_app.apiv1.auth import jwt
     # jwt.init_app(app)
@@ -79,11 +89,13 @@ def create_app():
     # http://flask.pocoo.org/docs/patterns/packages/
     # http://flask.pocoo.org/docs/blueprints/
     from maindir.apis.wallet import walletapi
+    from maindir.apis.issuance import issuanceapi
     from maindir.apis.main import main
     from maindir.websocket.receive import websoc
 
     app.register_blueprint(main)
     app.register_blueprint(walletapi)
+    app.register_blueprint(issuanceapi)
     app.register_blueprint(websoc)
     #
     # # from flask_app.script import resetdb, populatedb
@@ -92,7 +104,5 @@ def create_app():
     # # app.cli.add_command(resetdb)
     # # app.cli.add_command(populatedb)
     #
-
-
 
     return app

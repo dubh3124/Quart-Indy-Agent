@@ -20,7 +20,7 @@ async def createwallet():
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
             await asyncio.ensure_future(
-                Wallet(wallet_config, wallet_creds).create_wallet(name=data["name"])
+                Wallet(wallet_config=wallet_config, wallet_credentials=wallet_creds).create_wallet(name=data["name"])
             )
 
             return "wallet created"
@@ -40,16 +40,18 @@ async def createDID():
             didkey, verkey = await Wallet(
                 wallet_config, wallet_creds
             ).create_pairwise_DID(destinationName=data["destinationName"])
-            await Wallet(wallet_config, wallet_creds).storeDID(didkey,verkey,data["destinationName"])
-            # await Connection().submitToPool(
-            #     json.dumps({"id": "Agent"}),
-            #     json.dumps({"key": "SuperAgent!"}),
-            #     submitter_did= "Th7MpTaRZVRYnPiabds81Y",
-            #     target_did=didkey,
-            #     target_ver_key=verkey,
-            #     alias=None,
-            #     role="TRUST_ANCHOR",
-            # )
+            await Wallet(wallet_config, wallet_creds).storeDID(
+                didkey, verkey, data["destinationName"]
+            )
+            await Connection().submitToPool(
+                json.dumps({"id": "Agent"}),
+                json.dumps({"key": "SuperAgent!"}),
+                submitter_did="Th7MpTaRZVRYnPiabds81Y",
+                target_did=didkey,
+                target_ver_key=verkey,
+                alias=None,
+                role="TRUST_ANCHOR",
+            )
             return data["destinationName"] + " created!"
         except:
             logging.exception("DID not created!")
@@ -72,9 +74,16 @@ async def listDIDs():
 
 @walletapi.route("/send", methods=["POST"])
 async def send():
-    data = json.loads((await request.data))
-    if request.method == "POST":
-      return await Connection().establishConnection(data)
+    try:
+        if request.method == "POST":
+            data = json.loads((await request.data))
+            wallet_id = json.dumps({"id": data["walletId"]})
+            wallet_credentials = json.dumps({"key": data["walletKey"]})
+            await Connection().establishConnection(wallet_id, wallet_credentials, data)
+            return "connection established"
+    except Exception:
+        logging.exception("Agent connection failed!")
+        return "Agent connection failed!"
 
 
 @walletapi.route("/verkey", methods=["POST"])
