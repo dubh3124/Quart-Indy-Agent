@@ -41,7 +41,7 @@ RUN python -m venv venv && \
   chown -R quart:quart ./
 
 # Copy the app into our user root
-COPY quart_app/ /home/quart/
+COPY quart_app/ /home/quart
 # Make our entrypoint executable
 RUN chmod +x boot.sh
 

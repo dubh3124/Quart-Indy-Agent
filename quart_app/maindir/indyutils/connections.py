@@ -14,18 +14,16 @@ class Connection(Agent):
     async def establishConnection(self, wallet_id, wallet_credentials, data):
         connection_request = {}
         try:
-            pairwise_did, pairwise_verkey = await Wallet(
+            pairwise_info = json.loads((await Wallet(
                 wallet_id, wallet_credentials
-            ).create_pairwise_DID(
-                seed=data["seed"], destinationName=data["destinationName"]
-            )
-            logging.info("Submitting to Pool")
-            await self.submitToPool(await self.get_agent_did(), pairwise_did, pairwise_verkey)
+            ).getPairwiseInfo(data["theirDID"])))
+            pairwise_metadata = json.loads(pairwise_info["metadata"])
+            logging.info(pairwise_metadata)
 
             connection_request.update(
                 {
                     "name": "Agent1_" + data["destinationName"],
-                    "did": pairwise_did,
+                    "did": pairwise_metadata["pairwiseDID"],
                     "nonce": secrets.randbits(32),
                 }
             )
@@ -35,12 +33,12 @@ class Connection(Agent):
             ).sendMessage(json.dumps(connection_request))
             decrypted_resp = json.loads(
                 await Connection().decryptconnectionResponse(
-                    wallet_id, wallet_credentials, pairwise_verkey, resp
+                    wallet_id, wallet_credentials, pairwise_metadata["pairwiseVerkey"], resp
                 )
             )
             if connection_request["nonce"] == decrypted_resp["nonce"]:
                 await self.submitToPool(
-                    await self.get_agent_did(), decrypted_resp["did"], decrypted_resp["verkey"]
+                    decrypted_resp["did"], decrypted_resp["verkey"]
                 )
             else:
                 raise ValueError(
@@ -50,17 +48,14 @@ class Connection(Agent):
             logging.exception("Error establishing connection")
             raise e
 
-    async def validatesender(self, didkey):
+    @open_close_pool
+    async def validatesender(self, didkey, pool_handle=None):
         try:
             wallet_handle = await wallet.open_wallet(self.wallet_id, self.wallet_creds)
-            pool_handle = await pool.open_pool_ledger(
-                config_name=self.pool_name, config=self.agent_pool_config
-            )
-
-            resp = await did.key_for_did(pool_handle, wallet_handle, didkey)
+            verkey = await did.key_for_did(pool_handle, wallet_handle, didkey)
             await wallet.close_wallet(wallet_handle)
-            return resp
-        except:
+            return verkey
+        except IndyError:
             raise
 
     async def anon_encrypt_response(self, verkey, connection_response):
@@ -99,26 +94,22 @@ class Connection(Agent):
         target_did=None,
         target_ver_key=None,
         alias=None,
-        **kwargs
+        pool_handle=None
     ):
         agent_did = await self.get_agent_did()
-        wallet_handle = await wallet.open_wallet(self.wallet_id, self.wallet_creds)
-        # pool_handle = await pool.open_pool_ledger(
-        #     config_name=self.pool_name, config=None
-        # )
+        agent_wallet_handle = await wallet.open_wallet(self.wallet_id, self.wallet_creds)
 
         nym_request_json = await self._build_nym_request(
             agent_did, target_did, target_ver_key, alias=alias, role=self.agent_role
         )
 
         await ledger.sign_and_submit_request(
-            pool_handle=kwargs["pool_handle"],
-            wallet_handle=wallet_handle,
+            pool_handle=pool_handle,
+            wallet_handle=agent_wallet_handle,
             submitter_did=agent_did,
             request_json=nym_request_json,
         )
-        await wallet.close_wallet(wallet_handle)
-        # await pool.close_pool_ledger(kwargs["pool_handle"])
+        await wallet.close_wallet(agent_wallet_handle)
 
     async def decryptconnectionResponse(
         self, wallet_config, wallet_credentials, verkey, encrypted_connection_response

@@ -4,6 +4,7 @@ from quart import websocket, Blueprint, current_app as app
 from ..indyutils.wallet import Wallet
 from ..indyutils.connections import Connection
 from indy import did
+from indy.error import IndyError
 
 websoc = Blueprint("websoc", __name__)
 
@@ -16,8 +17,8 @@ async def ws():
         data = json.loads(payload)
 
         try:
-            wallet_config = app.config["AGENTID"]
-            wallet_creds = app.config["AGENTKEY"]
+            wallet_id = json.dumps({"id": "Agent2"})
+            wallet_credentials = json.dumps({"key": "SuperAgent2!"})
             # storeDID simulates the storing sender's did on pool ledger. It will not be used.
             # await Wallet(wallet_config, wallet_creds).storeDID(data['did'],data['verkey'], data['name'])
 
@@ -27,8 +28,9 @@ async def ws():
                 raise ConnectionError("Could not validate requestor")
             else:
                 response_didkey, response_verkey = await Wallet(
-                    wallet_config, wallet_creds
-                ).create_pairwise_DID(destinationName="MAIN_George_Billy_DID")
+                    wallet_id, wallet_credentials
+                ).create_pairwise_DID(destinationName="Alice2_Bob1")
+                await Connection().submitToPool(response_didkey, response_verkey)
                 connection_response = json.dumps(
                     {
                         "did": response_didkey,
@@ -40,7 +42,10 @@ async def ws():
                     resp_vk, connection_response
                 )
                 await websocket.send(resp)
+        except IndyError:
+            raise
         except Exception:
             logging.exception("Error with connection request")
             await websocket.send("DID NOT STORED ABORT")
+
             raise

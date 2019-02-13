@@ -3,7 +3,7 @@ services:
   quart-app-1:
     container_name: "quart-app-1"
     environment:
-    - POOLNAME=pool202
+    - POOLNAME=pool201
     - VERSION=2
     - AGENTID=Agent1
     - AGENTKEY=SuperAgent1!
@@ -15,6 +15,8 @@ services:
       dockerfile: quart_app/Dockerfile
     ports:
     - "9001:9000"
+    volumes:
+    - ./quart_app:/home/quart
   quart-app-2:
     container_name: "quart-app-2"
     environment:
@@ -22,7 +24,7 @@ services:
     - VERSION=2
     - AGENTID=Agent2
     - AGENTKEY=SuperAgent2!
-    - SEED=000000000000000000000000Steward2
+    - SEED=000000000000000000000000Steward1
     restart: always
     image: quart-app
     build:
@@ -30,6 +32,26 @@ services:
       dockerfile: quart_app/Dockerfile
     ports:
     - "9002:9000"
+    volumes:
+    - ./quart_app:/home/quart
+  quart-app-3:
+    container_name: "quart-app-3"
+    environment:
+    - POOLNAME=pool203
+    - VERSION=2
+    - AGENTID=Agent3
+    - AGENTKEY=SuperAgent3!
+    - SEED=000000000000000000000000Steward1
+    restart: always
+    image: quart-app
+    build:
+      context: .
+      dockerfile: quart_app/Dockerfile
+    ports:
+    - "9003:9000"
+    volumes:
+    - ./quart_app:/home/quart
+
 #  quart-nginx-1:
 #    image: quart-nginx
 #    build:
