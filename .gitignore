@@ -187,4 +187,8 @@ fabric.properties
 # (HH) Other Idea stuff
 .idea/Quart-Indy-Agent.iml
 .idea/encodings.xml
+.idea/dataSources.xml
 .idea/vcs.xml
+.indy_client
+.envbak
+
