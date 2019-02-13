@@ -10,14 +10,14 @@ from ..indyutils.wallet import Wallet
 class Agent(object):
     def __init__(self):
         self.genesis_file_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "ptgenesis")
-    )
+            os.path.join(os.path.dirname(__file__), "..", "ptgenesis")
+        )
         # Set protocol version to 2 to work with the current version of Indy Node
         self.PROTOCOL_VERSION = os.getenv("VERSION")
         self.pool_name = os.environ["POOLNAME"]
         self.wallet_id = json.dumps({"id": os.getenv("AGENTID")})
         self.wallet_creds = json.dumps({"key": os.getenv("AGENTKEY")})
-        self.agent_seed =os.getenv("SEED")
+        self.agent_seed = os.getenv("SEED")
         self.agent_pool_config = os.getenv("POOLCONFIG")
         self.agent_role = "TRUST_ANCHOR"
 

@@ -10,12 +10,6 @@ class Config(object):
         os.path.join(os.path.dirname(__file__), "..", "ptgenesis")
     )
     PROTOCOL_VERSION = os.getenv("VERSION")
-    AGENTID = json.dumps(
-        {"id": os.getenv("AGENTID")}
-    )
-    AGENTKEY = json.dumps(
-        {"key": os.getenv("AGENTKEY")}
-    )
-    SEED = (
-        os.getenv("SEED")
-    )
+    AGENTID = json.dumps({"id": os.getenv("AGENTID")})
+    AGENTKEY = json.dumps({"key": os.getenv("AGENTKEY")})
+    SEED = os.getenv("SEED")

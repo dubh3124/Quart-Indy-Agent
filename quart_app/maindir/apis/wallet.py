@@ -20,11 +20,13 @@ async def createwallet():
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
             await asyncio.ensure_future(
-                Wallet(wallet_config=wallet_config, wallet_credentials=wallet_creds).create_wallet(name=data["name"])
+                Wallet(
+                    wallet_config=wallet_config, wallet_credentials=wallet_creds
+                ).create_wallet(name=data["name"])
             )
 
             return "wallet created"
-        except:
+        except Exception:
             logging.exception("wallet creation failed")
             return "wallet creation failed"
 
@@ -38,11 +40,15 @@ async def storeDID():
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
             await asyncio.ensure_future(
-                Wallet(wallet_config=wallet_config, wallet_credentials=wallet_creds).store_did_and_create_pairwise(data["destinationDID"], data["destinationName"])
+                Wallet(
+                    wallet_config=wallet_config, wallet_credentials=wallet_creds
+                ).store_did_and_create_pairwise(
+                    data["destinationDID"], data["destinationName"]
+                )
             )
 
             return data["destinationName"] + " created!"
-        except:
+        except Exception:
             logging.exception("DID not created!")
             return data["destinationName"] + " not created!"
 
@@ -56,9 +62,10 @@ async def listDIDs():
             wallet_creds = json.dumps({"key": data["walletKey"]})
             return await Wallet(wallet_config, wallet_creds).listDIDs()
 
-        except:
+        except Exception:
             logging.exception("Could not list destination")
             return "Could not list destination"
+
 
 @walletapi.route("/listPairwiseDIDs", ["POST"])
 async def listPairwiseDIDs():
@@ -69,9 +76,10 @@ async def listPairwiseDIDs():
             wallet_creds = json.dumps({"key": data["walletKey"]})
             return await Wallet(wallet_config, wallet_creds).listPairwiseDIDs()
 
-        except:
+        except Exception:
             logging.exception("Could not list destination")
             return "Could not list destination"
+
 
 @walletapi.route("/PairwiseInfo", ["POST"])
 async def PairwiseInfo():
@@ -80,9 +88,11 @@ async def PairwiseInfo():
         try:
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
-            return await Wallet(wallet_config, wallet_creds).getPairwiseInfo(data["theirDID"])
+            return await Wallet(wallet_config, wallet_creds).getPairwiseInfo(
+                data["theirDID"]
+            )
 
-        except:
+        except Exception:
             logging.exception("Could not list destination")
             return "Could not list destination"
 
@@ -100,6 +110,7 @@ async def send():
         logging.exception("Agent connection failed!")
         return "Agent connection failed!"
 
+
 @walletapi.route("/records", methods=["GET"])
 async def get_wallet_records():
     data = json.loads((await request.data))
@@ -108,5 +119,10 @@ async def get_wallet_records():
     record_type = data["recordType"]
 
     if request.method == "GET":
-        await Wallet(wallet_config, wallet_creds).get_wallet_records(record_type, """{"value":"Ks8wQ6kdyaVUwT5vxT9wPD:3:CL:26:TestSchema1_def"}""")
-        return await Wallet(wallet_config, wallet_creds).get_wallet_records(record_type,"{}")
+        await Wallet(wallet_config, wallet_creds).get_wallet_records(
+            record_type,
+            """{"value":"Ks8wQ6kdyaVUwT5vxT9wPD:3:CL:26:TestSchema1_def"}""",
+        )
+        return await Wallet(wallet_config, wallet_creds).get_wallet_records(
+            record_type, "{}"
+        )

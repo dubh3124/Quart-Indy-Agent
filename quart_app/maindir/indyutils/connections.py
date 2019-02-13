@@ -14,9 +14,13 @@ class Connection(Agent):
     async def establishConnection(self, wallet_id, wallet_credentials, data):
         connection_request = {}
         try:
-            pairwise_info = json.loads((await Wallet(
-                wallet_id, wallet_credentials
-            ).getPairwiseInfo(data["theirDID"])))
+            pairwise_info = json.loads(
+                (
+                    await Wallet(wallet_id, wallet_credentials).getPairwiseInfo(
+                        data["theirDID"]
+                    )
+                )
+            )
             pairwise_metadata = json.loads(pairwise_info["metadata"])
             logging.info(pairwise_metadata)
 
@@ -33,13 +37,14 @@ class Connection(Agent):
             ).sendMessage(json.dumps(connection_request))
             decrypted_resp = json.loads(
                 await Connection().decryptconnectionResponse(
-                    wallet_id, wallet_credentials, pairwise_metadata["pairwiseVerkey"], resp
+                    wallet_id,
+                    wallet_credentials,
+                    pairwise_metadata["pairwiseVerkey"],
+                    resp,
                 )
             )
             if connection_request["nonce"] == decrypted_resp["nonce"]:
-                await self.submitToPool(
-                    decrypted_resp["did"], decrypted_resp["verkey"]
-                )
+                await self.submitToPool(decrypted_resp["did"], decrypted_resp["verkey"])
             else:
                 raise ValueError(
                     "Connection request and response nonce does not match!"
@@ -90,14 +95,12 @@ class Connection(Agent):
 
     @open_close_pool
     async def submitToPool(
-        self,
-        target_did=None,
-        target_ver_key=None,
-        alias=None,
-        pool_handle=None
+        self, target_did=None, target_ver_key=None, alias=None, pool_handle=None
     ):
         agent_did = await self.get_agent_did()
-        agent_wallet_handle = await wallet.open_wallet(self.wallet_id, self.wallet_creds)
+        agent_wallet_handle = await wallet.open_wallet(
+            self.wallet_id, self.wallet_creds
+        )
 
         nym_request_json = await self._build_nym_request(
             agent_did, target_did, target_ver_key, alias=alias, role=self.agent_role

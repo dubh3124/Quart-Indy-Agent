@@ -15,24 +15,28 @@ POOLGENESIS = os.path.abspath(
 
 def open_close_wallet(func):
     @functools.wraps(func)
-    async def wrapped(*args,**kwargs):
-        kwargs["wallet_handle"] = await wallet.open_wallet(args[0].wallet_config, args[0].wallet_credentials)
+    async def wrapped(*args, **kwargs):
+        kwargs["wallet_handle"] = await wallet.open_wallet(
+            args[0].wallet_config, args[0].wallet_credentials
+        )
         try:
             if not kwargs["wallet_handle"]:
                 raise Exception
             else:
-                resp = await func(*args,**kwargs)
+                resp = await func(*args, **kwargs)
                 await wallet.close_wallet(kwargs["wallet_handle"])
                 return resp
         except Exception:
             logging.exception("Error while executing function: " + func.__name__)
             await wallet.close_wallet(kwargs["wallet_handle"])
             raise
+
     return wrapped
+
 
 def open_close_pool(func):
     @functools.wraps(func)
-    async def wrapped(*args,**kwargs):
+    async def wrapped(*args, **kwargs):
         # logging.info(POOLGENESIS)
         # await create_pool_config(
         #     POOL_NAME,
@@ -44,7 +48,7 @@ def open_close_pool(func):
         )
         logging.info(kwargs)
         try:
-            resp = await func(*args,**kwargs)
+            resp = await func(*args, **kwargs)
             await pool.close_pool_ledger(kwargs["pool_handle"])
             # await pool.delete_pool_ledger_config(config_name=POOL_NAME)
             return resp
@@ -55,7 +59,9 @@ def open_close_pool(func):
             await pool.close_pool_ledger(kwargs["pool_handle"])
             # await pool.delete_pool_ledger_config(config_name=POOL_NAME)
             raise
+
     return wrapped
+
 
 async def create_pool_config(pool_name, genesis_file_path=None, version=None):
     logging.debug(pool_name)

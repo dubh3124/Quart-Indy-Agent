@@ -8,6 +8,7 @@ from collections import UserDict
 class Message(UserDict):
     """ Data Model for messages.
     """
+
     def __init__(self, *args, **kwargs):
         """ Create a Message object
 
@@ -17,9 +18,8 @@ class Message(UserDict):
         other things: ambiguous data. Interpretation defined by type and id.
 
         """
-        UserDict.__init__(self,*args, **kwargs)
+        UserDict.__init__(self, *args, **kwargs)
         self.context = {}
-
 
     def to_dict(self):
         return self.data
