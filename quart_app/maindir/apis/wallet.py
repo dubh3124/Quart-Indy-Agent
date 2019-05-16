@@ -4,11 +4,12 @@ import json
 import secrets
 from quart import Blueprint, request, jsonify
 from quart_openapi import Resource
-from ..indyutils.wallet import Wallet
+from ..indyutils.wallet.wallet import Wallet
 from ..websocket.client import WebsocketClient
 from ..indyutils.connections import Connection
 
 walletapi = Blueprint("walletapi", __name__, url_prefix="/wallet")
+log = logging.getLogger("indydev")
 
 
 @walletapi.route("/createwallet", ["POST"])
@@ -27,7 +28,7 @@ async def createwallet():
 
             return "wallet created"
         except Exception:
-            logging.exception("wallet creation failed")
+            log.exception("wallet creation failed")
             return "wallet creation failed"
 
 
@@ -49,7 +50,7 @@ async def storeDID():
 
             return data["destinationName"] + " created!"
         except Exception:
-            logging.exception("DID not created!")
+            log.exception("DID not created!")
             return data["destinationName"] + " not created!"
 
 
@@ -63,7 +64,7 @@ async def listDIDs():
             return await Wallet(wallet_config, wallet_creds).listDIDs()
 
         except Exception:
-            logging.exception("Could not list destination")
+            log.exception("Could not list destination")
             return "Could not list destination"
 
 
@@ -77,7 +78,7 @@ async def listPairwiseDIDs():
             return await Wallet(wallet_config, wallet_creds).listPairwiseDIDs()
 
         except Exception:
-            logging.exception("Could not list destination")
+            log.exception("Could not list destination")
             return "Could not list destination"
 
 
@@ -93,7 +94,7 @@ async def PairwiseInfo():
             )
 
         except Exception:
-            logging.exception("Could not list destination")
+            log.exception("Could not list destination")
             return "Could not list destination"
 
 
@@ -107,7 +108,7 @@ async def send():
             await Connection().establishConnection(wallet_id, wallet_credentials, data)
             return "connection established"
     except Exception:
-        logging.exception("Agent connection failed!")
+        log.exception("Agent connection failed!")
         return "Agent connection failed!"
 
 
@@ -119,10 +120,6 @@ async def get_wallet_records():
     record_type = data["recordType"]
 
     if request.method == "GET":
-        await Wallet(wallet_config, wallet_creds).get_wallet_records(
-            record_type,
-            """{"value":"Ks8wQ6kdyaVUwT5vxT9wPD:3:CL:26:TestSchema1_def"}""",
-        )
         return await Wallet(wallet_config, wallet_creds).get_wallet_records(
             record_type, "{}"
         )

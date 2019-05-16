@@ -11,11 +11,14 @@ POOL_NAME = os.getenv("POOLNAME")
 POOLGENESIS = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "ptgenesis")
 )
+log = logging.getLogger("indydev")
 
 
 def open_close_wallet(func):
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
+        log.info(args)
+        log.info(kwargs)
         kwargs["wallet_handle"] = await wallet.open_wallet(
             args[0].wallet_config, args[0].wallet_credentials
         )
@@ -27,7 +30,7 @@ def open_close_wallet(func):
                 await wallet.close_wallet(kwargs["wallet_handle"])
                 return resp
         except Exception:
-            logging.exception("Error while executing function: " + func.__name__)
+            log.exception("Error while executing function: " + func.__name__)
             await wallet.close_wallet(kwargs["wallet_handle"])
             raise
 
@@ -37,7 +40,7 @@ def open_close_wallet(func):
 def open_close_pool(func):
     @functools.wraps(func)
     async def wrapped(*args, **kwargs):
-        # logging.info(POOLGENESIS)
+        # log.info(POOLGENESIS)
         # await create_pool_config(
         #     POOL_NAME,
         #     genesis_file_path=POOLGENESIS,
@@ -46,7 +49,7 @@ def open_close_pool(func):
         kwargs["pool_handle"] = await pool.open_pool_ledger(
             config_name=os.environ["POOLNAME"], config=None
         )
-        logging.info(kwargs)
+        log.info(kwargs)
         try:
             resp = await func(*args, **kwargs)
             await pool.close_pool_ledger(kwargs["pool_handle"])
@@ -55,7 +58,7 @@ def open_close_pool(func):
         except IndyError:
             raise
         except Exception:
-            logging.exception("Error while executing function: " + func.__name__)
+            log.exception("Error while executing function: " + func.__name__)
             await pool.close_pool_ledger(kwargs["pool_handle"])
             # await pool.delete_pool_ledger_config(config_name=POOL_NAME)
             raise
@@ -64,9 +67,9 @@ def open_close_pool(func):
 
 
 async def create_pool_config(pool_name, genesis_file_path=None, version=None):
-    logging.debug(pool_name)
-    logging.debug(genesis_file_path)
-    logging.debug(version)
+    log.debug(pool_name)
+    log.debug(genesis_file_path)
+    log.debug(version)
     await pool.set_protocol_version(version)
     # print_log('\n1. Creates a new local pool ledger configuration that is used '
     #           'later when connecting to ledger.\n')
@@ -76,6 +79,6 @@ async def create_pool_config(pool_name, genesis_file_path=None, version=None):
         await pool.create_pool_ledger_config(pool_name, pool_config)
 
     except IndyError as e:
-        logging.exception(e)
+        log.exception(e)
         await pool.delete_pool_ledger_config(config_name=pool_name)
         raise

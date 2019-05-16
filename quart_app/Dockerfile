@@ -34,10 +34,11 @@ RUN apt-get install -y libindy
 
 
 # Copy requirements to the app root
-COPY quart_app/requirements.txt ./
+COPY quart_app/Pipfile.lock ./
 # Create a virtual environment and install the dependecies
 RUN python -m venv venv && \
-  venv/bin/pip install --no-cache-dir -r requirements.txt --upgrade && \
+  venv/bin/pip install pipenv && \
+  venv/bin/pipenv install && \
   chown -R quart:quart ./
 
 # Copy the app into our user root

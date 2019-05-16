@@ -2,12 +2,13 @@ import logging
 import json
 from indy import crypto, anoncreds, ledger, wallet, pool
 from indy.error import IndyError
-from .wallet import Wallet
+from .wallet.wallet import Wallet
 from .utils import open_close_wallet, open_close_pool
+
+log = logging.getLogger("indydev")
 
 
 class Issuance(Wallet):
-
     cred_schema_record_type = "credentialSchemas"
     cred_definition_record_type = "credentialDefinitions"
     cred_request_record_type = "credentialRequest"
@@ -45,10 +46,10 @@ class Issuance(Wallet):
             )
             return schema_id
         except IndyError:
-            logging.exception("Error occured while creating schema")
+            log.exception("Error occured while creating schema")
             raise
         except Exception:
-            logging.exception("Error occured while creating schema")
+            log.exception("Error occured while creating schema")
             raise
 
     @open_close_wallet
@@ -64,10 +65,10 @@ class Issuance(Wallet):
             _, schema = await ledger.parse_get_schema_response(get_schema_response)
             return schema
         except IndyError:
-            logging.exception("Error occured while creating schemaa")
+            log.exception("Error occured while creating schemaa")
             raise
         except Exception:
-            logging.exception("Error occured while creating schema")
+            log.exception("Error occured while creating schema")
             raise
 
     @open_close_wallet
@@ -109,10 +110,10 @@ class Issuance(Wallet):
             )
             return resp
         except IndyError:
-            logging.exception("Error while creating credential definition")
+            log.exception("Error while creating credential definition")
             raise
         except Exception:
-            logging.exception("Error occured while creating definition")
+            log.exception("Error occured while creating definition")
             raise
 
     @open_close_wallet
@@ -134,10 +135,10 @@ class Issuance(Wallet):
             )
             return cred_def_json
         except IndyError:
-            logging.exception("Error occured while getting credential definition")
+            log.exception("Error occured while getting credential definition")
             raise
         except Exception:
-            logging.exception("Error occured while getting credential definition")
+            log.exception("Error occured while getting credential definition")
             raise
 
     @open_close_wallet
@@ -150,10 +151,10 @@ class Issuance(Wallet):
             )
             return cred_offer_json
         except IndyError:
-            logging.exception("Error occured while creating credential offer")
+            log.exception("Error occured while creating credential offer")
             raise
         except Exception:
-            logging.exception("Error occured while creating credential offer")
+            log.exception("Error occured while creating credential offer")
             raise
 
     @open_close_wallet
@@ -185,10 +186,10 @@ class Issuance(Wallet):
             )
             return credential_request
         except IndyError:
-            logging.exception("Error occured while creating credential request")
+            log.exception("Error occured while creating credential request")
             raise
         except Exception:
-            logging.exception("Error occured while creating credential request")
+            log.exception("Error occured while creating credential request")
             raise
 
     # Issuer helpers
@@ -249,10 +250,10 @@ class Issuance(Wallet):
             )
             return cred_def_json
         except IndyError:
-            logging.exception("Error occured while getting credential definition")
+            log.exception("Error occured while getting credential definition")
             raise
         except Exception:
-            logging.exception("Error occured while getting credential definition")
+            log.exception("Error occured while getting credential definition")
             raise
 
     # Prover helpers
@@ -281,7 +282,7 @@ class Issuance(Wallet):
                 cred_def_id, wallet_handle, pool_handle
             )
             cred_def = json.loads(cred_def_json)
-            logging.info(cred_def)
+            log.info(cred_def)
             query = {"credentialDefinitionID": cred_def["id"]}
             queryresp = json.loads(
                 (

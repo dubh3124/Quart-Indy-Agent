@@ -48,11 +48,21 @@ async def create_pool_config(pool_name, genesis_file_path=None, version=None):
 
 
 def create_app():
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    logging.basicConfig(level=logging.DEBUG, handlers=[ch])
+    app = Quart("indydev")
 
-    app = Quart(__name__)
+    # ch = logging.StreamHandler(sys.stdout)
+    # ch.setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, datefmt="%d-%b-%y %H:%M:%S")
+    # Create a new handler for log messages that will send them to standard error
+    # handler = logging.StreamHandler(sys.stdout)
+    #
+    # # Add a formatter that makes use of our new contextual information
+    # log_format = "%(asctime)s\t%(levelname)s\t%(user_id)s\t%(ip)s\t%(method)s\t%(url)s\t%(message)s"
+    # formatter = logging.Formatter(log_format)
+    # handler.setFormatter(formatter)
+    # app.logger.setLevel(logging.DEBUG)
+    # # Finally, attach the handler to our logger
+    # app.logger.addHandler(handler)
 
     app.config.from_object("maindir.config.Config")
     poolc = asyncio.get_event_loop().run_until_complete(

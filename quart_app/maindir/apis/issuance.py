@@ -5,7 +5,6 @@ import secrets
 from quart import Blueprint, request, jsonify
 from quart_openapi import Resource
 from ..indyutils.issuance import Issuance
-from ..indyutils.wallet import Wallet
 from ..websocket.client import WebsocketClient
 from ..indyutils.connections import Connection
 from ..indyutils.tempjson import cred_offer, cred_req, cred_json

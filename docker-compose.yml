@@ -8,6 +8,7 @@ services:
     - AGENTID=Agent1
     - AGENTKEY=SuperAgent1!
     - SEED=000000000000000000000000Steward1
+    - AGENTENDPOINT=devdesktop.com:9001/agent
     restart: always
     image: quart-app
     build:
@@ -25,6 +26,7 @@ services:
     - AGENTID=Agent2
     - AGENTKEY=SuperAgent2!
     - SEED=000000000000000000000000Steward1
+    - AGENTENDPOINT=devdesktop.com:9002/agent
     restart: always
     image: quart-app
     build:
@@ -42,6 +44,7 @@ services:
     - AGENTID=Agent3
     - AGENTKEY=SuperAgent3!
     - SEED=000000000000000000000000Steward1
+    - AGENTENDPOINT=devdesktop.com:9003/agent
     restart: always
     image: quart-app
     build:

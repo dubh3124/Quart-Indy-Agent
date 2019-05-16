@@ -5,9 +5,11 @@ from quart import current_app as app
 from indy import pool, ledger, wallet, did, crypto
 from indy.error import IndyError
 from .agent import Agent
-from .wallet import Wallet
+from .wallet.wallet import Wallet
 from ..websocket.client import WebsocketClient
-from .utils import open_close_pool
+from .utils import open_close_pool, open_close_wallet
+
+log = logging.getLogger("indydev")
 
 
 class Connection(Agent):
@@ -22,7 +24,7 @@ class Connection(Agent):
                 )
             )
             pairwise_metadata = json.loads(pairwise_info["metadata"])
-            logging.info(pairwise_metadata)
+            log.info(pairwise_metadata)
 
             connection_request.update(
                 {
@@ -31,7 +33,7 @@ class Connection(Agent):
                     "nonce": secrets.randbits(32),
                 }
             )
-            logging.info("Sending to Agent 2")
+            log.info("Sending to Agent 2")
             resp = await WebsocketClient(
                 "ws://192.168.50.181:9002/connectionrequest"
             ).sendMessage(json.dumps(connection_request))
@@ -50,13 +52,12 @@ class Connection(Agent):
                     "Connection request and response nonce does not match!"
                 )
         except Exception as e:
-            logging.exception("Error establishing connection")
+            log.exception("Error establishing connection")
             raise e
 
     @open_close_pool
-    async def validatesender(self, didkey, pool_handle=None):
+    async def validatesender(self, didkey, pool_handle=None, wallet_handle=None):
         try:
-            wallet_handle = await wallet.open_wallet(self.wallet_id, self.wallet_creds)
             verkey = await did.key_for_did(pool_handle, wallet_handle, didkey)
             await wallet.close_wallet(wallet_handle)
             return verkey
@@ -98,21 +99,20 @@ class Connection(Agent):
         self, target_did=None, target_ver_key=None, alias=None, pool_handle=None
     ):
         agent_did = await self.get_agent_did()
-        agent_wallet_handle = await wallet.open_wallet(
-            self.wallet_id, self.wallet_creds
+        wallet_handle = await wallet.open_wallet(
+            self.wallet_config, self.wallet_credentials
         )
-
         nym_request_json = await self._build_nym_request(
             agent_did, target_did, target_ver_key, alias=alias, role=self.agent_role
         )
 
         await ledger.sign_and_submit_request(
             pool_handle=pool_handle,
-            wallet_handle=agent_wallet_handle,
+            wallet_handle=wallet_handle,
             submitter_did=agent_did,
             request_json=nym_request_json,
         )
-        await wallet.close_wallet(agent_wallet_handle)
+        await wallet.close_wallet(wallet_handle)
 
     async def decryptconnectionResponse(
         self, wallet_config, wallet_credentials, verkey, encrypted_connection_response

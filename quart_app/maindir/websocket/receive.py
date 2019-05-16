@@ -1,7 +1,7 @@
 import logging
 import json
 from quart import websocket, Blueprint, current_app as app
-from ..indyutils.wallet import Wallet
+from ..indyutils.wallet.wallet import Wallet
 from ..indyutils.connections import Connection
 from indy import did
 from indy.error import IndyError
@@ -9,7 +9,7 @@ from indy.error import IndyError
 websoc = Blueprint("websoc", __name__)
 
 
-@websoc.websocket("/connectionrequest")
+@websoc.websocket("/agent")
 async def ws():
     while True:
         payload = await websocket.receive()
@@ -23,7 +23,7 @@ async def ws():
             # await Wallet(wallet_config, wallet_creds).storeDID(data['did'],data['verkey'], data['name'])
 
             resp_vk = await Connection().validatesender(data["did"])
-            if resp_vk == False:
+            if resp_vk is False:
                 await websocket.send("DID not validated")
                 raise ConnectionError("Could not validate requestor")
             else:
