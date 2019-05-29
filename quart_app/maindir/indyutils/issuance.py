@@ -308,5 +308,14 @@ class Issuance(Wallet):
     async def _build_schema_request(self, did, schema):
         return await ledger.build_schema_request(did, schema)
 
-    def build_credentials(self, wallet_handle):
-        print("hi")
+    def build_credentials(self, cred_def_json):
+        cred_def = json.loads(cred_def_json)
+        cred_values = json.dumps({
+            "first_name": {"raw": "Alice", "encoded": "1139481716457488690172217916278103335"},
+            "last_name": {"raw": "Garcia", "encoded": "5321642780241790123587902456789123452"},
+            "degree": {"raw": "Bachelor of Science, Marketing", "encoded": "12434523576212321"},
+            "status": {"raw": "graduated", "encoded": "2213454313412354"},
+            "ssn": {"raw": "123-45-6789", "encoded": "3124141231422543541"},
+            "year": {"raw": "2015", "encoded": "2015"},
+            "average": {"raw": "5", "encoded": "5"}
+        })

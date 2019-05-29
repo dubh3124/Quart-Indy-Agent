@@ -7,7 +7,7 @@ from quart_openapi import Resource
 from ..indyutils.issuance import Issuance
 from ..websocket.client import WebsocketClient
 from ..indyutils.connections import Connection
-from ..indyutils.tempjson import cred_offer, cred_req, cred_json
+from ..indyutils.tempjson import cred_offer
 
 
 issuanceapi = Blueprint("issuanceapi", __name__, url_prefix="/issuance")
@@ -77,32 +77,32 @@ async def cred_request():
         return f"{credential_request_json}"
 
 
-@issuanceapi.route("/cred", ["GET", "POST"])
-async def cred():
-    if request.method == "POST":
+# @issuanceapi.route("/cred", ["GET", "POST"])
+# async def cred():
+#     if request.method == "POST":
+#
+#         data = json.loads((await request.data))
+#         wallet_config = json.dumps({"id": data["walletId"]})
+#         wallet_creds = json.dumps({"key": data["walletKey"]})
+#         var1, var2, var3 = await Issuance(
+#             wallet_config=wallet_config, wallet_credentials=wallet_creds
+#         ).create_credential(cred_offer, data["cred_req_json"])
+#         return f"{var1}\n{var2}\n{var3}"
 
-        data = json.loads((await request.data))
-        wallet_config = json.dumps({"id": data["walletId"]})
-        wallet_creds = json.dumps({"key": data["walletKey"]})
-        var1, var2, var3 = await Issuance(
-            wallet_config=wallet_config, wallet_credentials=wallet_creds
-        ).create_credential(cred_offer, data["cred_req_json"])
-        return f"{var1}\n{var2}\n{var3}"
 
-
-@issuanceapi.route("/storecred", ["GET", "POST"])
-async def storeCred():
-    try:
-        if request.method == "POST":
-
-            data = json.loads((await request.data))
-            wallet_config = json.dumps({"id": data["walletId"]})
-            wallet_creds = json.dumps({"key": data["walletKey"]})
-            await Issuance(
-                wallet_config=wallet_config, wallet_credentials=wallet_creds
-            ).store_credential_api(data["credentialDefinitionID"], cred_json)
-
-            return "Credential stored!"
-    except Exception:
-        logging.exception("Credential not stored!")
-        return "Credential not stored!"
+# @issuanceapi.route("/storecred", ["GET", "POST"])
+# async def storeCred():
+#     try:
+#         if request.method == "POST":
+#
+#             data = json.loads((await request.data))
+#             wallet_config = json.dumps({"id": data["walletId"]})
+#             wallet_creds = json.dumps({"key": data["walletKey"]})
+#             await Issuance(
+#                 wallet_config=wallet_config, wallet_credentials=wallet_creds
+#             ).store_credential_api(data["credentialDefinitionID"], cred_json)
+#
+#             return "Credential stored!"
+#     except Exception:
+#         logging.exception("Credential not stored!")
+#         return "Credential not stored!"

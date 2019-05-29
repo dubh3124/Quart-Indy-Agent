@@ -4,9 +4,12 @@ import json
 import secrets
 from quart import Blueprint, request, jsonify
 from quart_openapi import Resource
+
+from ..indyutils.tenant import Tenant
 from ..indyutils.wallet.wallet import Wallet
 from ..websocket.client import WebsocketClient
 from ..indyutils.connections import Connection
+from indy.error import IndyError, ErrorCode
 
 walletapi = Blueprint("walletapi", __name__, url_prefix="/wallet")
 log = logging.getLogger("indydev")
@@ -21,15 +24,39 @@ async def createwallet():
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
             await asyncio.ensure_future(
-                Wallet(
+                Tenant(
                     wallet_config=wallet_config, wallet_credentials=wallet_creds
                 ).create_wallet(name=data["name"])
             )
 
             return "wallet created"
+        except IndyError as e:
+            if e.error_code == ErrorCode.WalletAlreadyExistsError:
+                return "Wallet Already Exist!"
+            else:
+                log.exception("wallet creation failed")
+                return "wallet creation failed"
         except Exception:
             log.exception("wallet creation failed")
             return "wallet creation failed"
+
+@walletapi.route("/dCard", ["POST"])
+async def generate_dCard():
+    if request.method == "POST":
+        data = json.loads((await request.data))
+
+        try:
+            wallet_config = json.dumps({"id": data["walletId"]})
+            wallet_creds = json.dumps({"key": data["walletKey"]})
+            return await asyncio.ensure_future(
+                Tenant(
+                    wallet_config=wallet_config, wallet_credentials=wallet_creds
+                ).generate_dCard("Bob1")
+            )
+
+        except Exception:
+            log.exception("Cannot generate dCard")
+            return "Cannot generate dCard"
 
 
 @walletapi.route("/StoreUserDID", ["POST"])
@@ -61,7 +88,7 @@ async def listDIDs():
         try:
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
-            return await Wallet(wallet_config, wallet_creds).listDIDs()
+            return await Tenant(wallet_config, wallet_creds).listDIDs()
 
         except Exception:
             log.exception("Could not list destination")
@@ -75,7 +102,7 @@ async def listPairwiseDIDs():
         try:
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
-            return await Wallet(wallet_config, wallet_creds).listPairwiseDIDs()
+            return await Tenant(wallet_config, wallet_creds).listPairwiseDIDs()
 
         except Exception:
             log.exception("Could not list destination")
@@ -89,7 +116,7 @@ async def PairwiseInfo():
         try:
             wallet_config = json.dumps({"id": data["walletId"]})
             wallet_creds = json.dumps({"key": data["walletKey"]})
-            return await Wallet(wallet_config, wallet_creds).getPairwiseInfo(
+            return await Tenant(wallet_config, wallet_creds).getPairwiseInfo(
                 data["theirDID"]
             )
 
@@ -120,6 +147,6 @@ async def get_wallet_records():
     record_type = data["recordType"]
 
     if request.method == "GET":
-        return await Wallet(wallet_config, wallet_creds).get_wallet_records(
+        return await Tenant(wallet_config, wallet_creds).get_wallet_records(
             record_type, "{}"
         )

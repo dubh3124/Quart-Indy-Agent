@@ -6,6 +6,7 @@ import os
 from quart import Quart
 from indy import pool, wallet, did
 from indy.error import IndyError
+from maindir.indyutils.agent import Agent
 
 
 async def generate_DID(wallet_handle, seed=None, name=None):
@@ -74,9 +75,7 @@ def create_app():
     )
     logging.debug(poolc)
     asyncio.get_event_loop().run_until_complete(
-        create_wallet(
-            app.config["AGENTID"], app.config["AGENTKEY"], "Agent", app.config["SEED"]
-        )
+        Agent().create_wallet(app.config["AGENTID"], app.config["SEED"])
     )
 
     # from flask_app.apiv1.auth import jwt
