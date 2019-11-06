@@ -46,7 +46,7 @@ pytoml==0.1.19
 PyYAML==3.13
 Quart==0.6.7
 quart-openapi==1.3.6
-requests==2.19.1
+requests==2.20.0
 serpy==0.3.1
 six==1.11.0
 socketIO-client==0.7.2
