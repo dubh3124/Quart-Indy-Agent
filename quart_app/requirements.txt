@@ -24,7 +24,7 @@ identify==1.2.1
 idna==2.7
 importlib-metadata==0.8
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.11.3
 json-logging==0.0.9
 json-logging-py==0.2
 jsonschema==2.6.0
