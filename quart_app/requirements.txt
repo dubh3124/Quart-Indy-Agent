@@ -34,7 +34,7 @@ multidict==4.4.2
 nodeenv==1.3.3
 pluggy==0.7.1
 pre-commit==1.14.3
-py==1.6.0
+py==1.10.0
 pytest==3.6.4
 pytest-asyncio==0.9.0
 python-dotenv==0.10.1
